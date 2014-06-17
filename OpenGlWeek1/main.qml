@@ -18,4 +18,11 @@ Item {
         x: 300
         y: 300
     }
+
+    BasicGlTest{
+        width: 120
+        height: 120
+        x: 100
+        y: 100
+    }
 }

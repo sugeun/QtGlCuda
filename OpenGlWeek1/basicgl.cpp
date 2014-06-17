@@ -52,11 +52,9 @@ void BasicGl::paint()
    float values[] = {
        -1, -1,
        1, -1,
-       -1, 1,
-       1, 1
+       -1, 1
    };
    m_pShaderProgram->setAttributeArray(0, GL_FLOAT, values, 2);
-   m_pShaderProgram->setUniformValue("t", (float) 0.0f);
 
    int w = this->width();
    int h = this->height();
@@ -66,13 +64,7 @@ void BasicGl::paint()
 
    glDisable(GL_DEPTH_TEST);
 
-   glClearColor(0, 0, 0, 1);
-   glClear(GL_COLOR_BUFFER_BIT);
-
-   glEnable(GL_BLEND);
-   glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-
-   glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+   glDrawArrays(GL_TRIANGLE_STRIP, 0, 3);
 
    m_pShaderProgram->disableAttributeArray(0);
    m_pShaderProgram->release();
