@@ -9,14 +9,21 @@ Item {
 
 
     Text {
+        color: "#00ff00"
         text: qsTr("Hello World")
         anchors.centerIn: parent
     }
     BasicGlTest{
-        width: 100
-        height: 100
+        width: 200
+        height: 200
         x: 300
         y: 300
+        SequentialAnimation on rotate {
+            NumberAnimation { to: 1; duration: 2500;  }
+            NumberAnimation { to: 0; duration: 2500;  }
+            loops: Animation.Infinite
+            running: true
+        }
     }
 
     BasicGlTest{

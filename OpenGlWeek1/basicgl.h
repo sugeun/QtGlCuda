@@ -7,8 +7,17 @@
 class BasicGl : public QQuickItem
 {
    Q_OBJECT
+
+    Q_PROPERTY(qreal rotate READ rotate WRITE setRotate NOTIFY rotateChanged)
+
 public:
    BasicGl();
+
+   qreal rotate() const { return m_rRotate; }
+   void setRotate(qreal rotate);
+
+signals:
+   void rotateChanged();
 
 public slots:
    void paint();
@@ -18,6 +27,9 @@ private slots:
 
 private:
    QOpenGLShaderProgram* m_pShaderProgram;
+
+   GLint m_iMatrixUniform;
+   qreal m_rRotate;
 
 };
 

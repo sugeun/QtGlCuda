@@ -1,11 +1,13 @@
 #include "basicgl.h"
 
 #include <QtQuick/qquickwindow.h>
+#include <QtGui/QMatrix4x4>
 #include <QtGui/QOpenGLShaderProgram>
 #include <QtGui/QOpenGLContext>
 
 BasicGl::BasicGl()
    : m_pShaderProgram(0)
+   , m_rRotate(0.0f)
 {
    connect( this,
             SIGNAL(windowChanged(QQuickWindow*)),
@@ -28,6 +30,16 @@ void BasicGl::handleWindowChanged(QQuickWindow* win)
 }
 
 
+void BasicGl::setRotate(qreal rotate )
+{
+   if (rotate == m_rRotate)
+       return;
+   m_rRotate = rotate;
+   emit rotateChanged();
+   if (window())
+       window()->update();
+}
+
 
 
 void BasicGl::paint()
@@ -43,16 +55,22 @@ void BasicGl::paint()
                                                 ":/BasicGlFragment.frag");
 
       m_pShaderProgram->bindAttributeLocation("vertices", 0);
+
       m_pShaderProgram->link();
+      m_iMatrixUniform = m_pShaderProgram->uniformLocation("matrix");
    }
 
    m_pShaderProgram->bind();
    m_pShaderProgram->enableAttributeArray(0);
+   QMatrix4x4 matrix;
+   matrix.rotate( 360.0f * m_rRotate, 0, 1, 0);
+
+   m_pShaderProgram->setUniformValue(m_iMatrixUniform, matrix);
 
    float values[] = {
-       -1, -1,
-       1, -1,
-       -1, 1
+      0.0f, 0.707f,
+      -0.5f, -0.5f,
+      0.5f, -0.5f
    };
    m_pShaderProgram->setAttributeArray(0, GL_FLOAT, values, 2);
 
@@ -64,9 +82,16 @@ void BasicGl::paint()
 
    glDisable(GL_DEPTH_TEST);
 
+//   glClearColor(0, 0, 0, 1);
+//   glClear(GL_COLOR_BUFFER_BIT);
+   glEnable(GL_SCISSOR_TEST);
+   glScissor(x, y, w, h);
+   glClearColor(0, 0, 0, 1);
+   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+   glDisable(GL_SCISSOR_TEST);
+
    glDrawArrays(GL_TRIANGLE_STRIP, 0, 3);
 
    m_pShaderProgram->disableAttributeArray(0);
    m_pShaderProgram->release();
-
 }
