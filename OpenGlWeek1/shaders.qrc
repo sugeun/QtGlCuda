@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="/">
+        <file>BasicGlFragment.frag</file>
+        <file>BasicGlVertex.vert</file>
+    </qresource>
+</RCC>
