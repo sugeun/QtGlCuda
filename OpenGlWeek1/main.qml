@@ -13,6 +13,15 @@ Item {
         text: qsTr("Hello World")
         anchors.centerIn: parent
     }
+    Rectangle
+    {
+        x: 300
+        y: 300
+        width: 100
+        height: 100
+        color: "#0ff000"
+    }
+
     BasicGlTest{
         width: 200
         height: 200
@@ -24,6 +33,12 @@ Item {
             loops: Animation.Infinite
             running: true
         }
+        MouseArea {
+            anchors.fill: parent
+            drag.target: parent
+            //drag.axis: Drag.XAxis
+
+        }
     }
 
     BasicGlTest{
@@ -31,5 +46,11 @@ Item {
         height: 120
         x: 100
         y: 100
+        SequentialAnimation on rotate {
+            NumberAnimation { to: 1; duration: 4000;  }
+            NumberAnimation { to: 0; duration: 2500;  }
+            loops: Animation.Infinite
+            running: true
+        }
     }
 }

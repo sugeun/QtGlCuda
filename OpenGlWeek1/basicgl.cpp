@@ -24,7 +24,6 @@ void BasicGl::handleWindowChanged(QQuickWindow* win)
       connect(win, SIGNAL(beforeRendering()), this,
               SLOT(paint()), Qt::DirectConnection );
 
-      //connect(win, SIGNAL(beforeSynchronizing()), this, SLOT(sync()), Qt::DirectConnection);
       win->setClearBeforeRendering(false);
    }
 }
@@ -62,10 +61,6 @@ void BasicGl::paint()
 
    m_pShaderProgram->bind();
    m_pShaderProgram->enableAttributeArray(0);
-   QMatrix4x4 matrix;
-   matrix.rotate( 360.0f * m_rRotate, 0, 1, 0);
-
-   m_pShaderProgram->setUniformValue(m_iMatrixUniform, matrix);
 
    float values[] = {
       0.0f, 0.707f,
@@ -77,18 +72,25 @@ void BasicGl::paint()
    int w = this->width();
    int h = this->height();
    int x = this->x();
-   int y = this->y();
+   int y = window()->height() - (this->y() + h );
    glViewport(x, y, w, h);
 
-   glDisable(GL_DEPTH_TEST);
+   QMatrix4x4 matrix;
+
+   matrix.ortho(-1.0f, 1.0f, -1.0f, 1.0f, -1.0f, 1.0f);
+   matrix.rotate( 360.0f * m_rRotate, 0, 1, 0);
+
+   m_pShaderProgram->setUniformValue(m_iMatrixUniform, matrix);
+
+   //glDisable(GL_DEPTH_TEST);
 
 //   glClearColor(0, 0, 0, 1);
 //   glClear(GL_COLOR_BUFFER_BIT);
-   glEnable(GL_SCISSOR_TEST);
-   glScissor(x, y, w, h);
-   glClearColor(0, 0, 0, 1);
-   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-   glDisable(GL_SCISSOR_TEST);
+      glEnable(GL_SCISSOR_TEST);
+      glScissor(x, y, w, h);
+      glClearColor(0.0f, 0.0f, 1.0f, 1.0f);
+      glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+      glDisable(GL_SCISSOR_TEST);
 
    glDrawArrays(GL_TRIANGLE_STRIP, 0, 3);
 
