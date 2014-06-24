@@ -8,6 +8,7 @@
 BasicGl::BasicGl()
    : m_pShaderProgram(0)
    , m_rRotate(0.0f)
+   , m_iSphereRes( 10 )
 {
    connect( this,
             SIGNAL(windowChanged(QQuickWindow*)),
@@ -61,6 +62,35 @@ void BasicGl::init()
    m_lNormalMatrix = m_pShaderProgram->uniformLocation("normalMatrix");
    m_lLightPosition = m_pShaderProgram->uniformLocation("vLightPosition");
 
+   initSphereVertices();
+
+}
+
+void BasicGl::initSphereVertices()
+{
+    m_iNumVertices = m_iSphereRes * (m_iSphereRes - 1 ) * 2;
+
+    m_fVertices = new float[m_iNumVertices * 2];
+
+    float delta = 1.0f / float(m_iSphereRes);
+
+    int vIdx = 0;
+    for( int j = 0 ; j < m_iSphereRes - 1 ; j++ )
+    {
+    for( int i = 0 ; i < m_iSphereRes ; i++ )
+    {
+        float x, y1, y2;
+        x = float(i) * delta;
+        y1 = 1.0f - float(j) * delta;
+        y2 = 1.0f - float(j+1) * delta;
+        m_fVertices[vIdx++] = x;
+        m_fVertices[vIdx++] = y1;
+        m_fVertices[vIdx++] = x;
+        m_fVertices[vIdx++] = y2;
+
+    }
+    }
+    int vIdx1 = 0;
 }
 
 
@@ -77,21 +107,17 @@ void BasicGl::paint()
    mNormal.normalMatrix();
 
    QMatrix4x4 matrix;
-   matrix.rotate( 180.0f * m_rRotate, 0, 1, 0);
+   matrix.rotate( 360.0f * m_rRotate, 0, 1, 0);
    m_pShaderProgram->setUniformValue(m_lMvMatrix, matrix);
-   matrix.ortho(-1.0f, 1.0f, -1.0f, 1.0f, -1.0f, 1.0f);
+   matrix.ortho(-2.0f, 2.0f, -2.0f, 2.0f, -2.0f, 2.0f);
    m_pShaderProgram->setUniformValue(m_lMvpMatrix, matrix);
    m_pShaderProgram->setUniformValue(m_lNormalMatrix, matrix.normalMatrix() );
 
    QMatrix3x3 normalMatrix = matrix.normalMatrix();
 
-   float vertices[] = {
-      0.0f, 0.707f, 0.0f,
-      -0.5f, -0.5f, 0.0f,
-      0.5f, -0.5f, 0.0f
-   };
-   QVector3D surfaceNormal = calculateSurfaceNormal(vertices);
-   m_pShaderProgram->setAttributeArray(0, GL_FLOAT, vertices, 3);
+   QVector3D surfaceNormal;// = calculateSurfaceNormal(m_fVertices);
+   m_pShaderProgram->setAttributeArray(0, GL_FLOAT, m_fVertices, 2);
+
    m_pShaderProgram->setAttributeValue(1, surfaceNormal );
 
    int w = this->width();
@@ -100,21 +126,24 @@ void BasicGl::paint()
    int y = window()->height() - (this->y() + h );
    glViewport(x, y, w, h);
 
-   //glDisable(GL_DEPTH_TEST);
+   //glEnable(GL_DEPTH_TEST);
+   glClear(GL_COLOR_BUFFER_BIT);
 
-//   glClearColor(0, 0, 0, 1);
-//   glClear(GL_COLOR_BUFFER_BIT);
-   glEnable(GL_SCISSOR_TEST);
-   glScissor(x, y, w, h);
-   glClearColor(0.8f, 0.8f, 0.8f, 1.0f);
-   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-   glDisable(GL_SCISSOR_TEST);
 
-   glDrawArrays(GL_TRIANGLE_STRIP, 0, 3);
+   //glDrawArrays(GL_TRIANGLE_STRIP, 0 , m_iNumVertices) ;
+   glDrawArrays(GL_LINE_STRIP, 0 , m_iNumVertices) ;
 
    m_pShaderProgram->disableAttributeArray(0);
    m_pShaderProgram->release();
 }
+
+
+
+
+
+
+
+
 
 QVector3D BasicGl::calculateSurfaceNormal(float* triangle)
 {

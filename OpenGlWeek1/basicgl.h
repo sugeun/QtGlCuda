@@ -19,6 +19,7 @@ public:
 
 private:
    void init();
+   void initSphereVertices();
    QVector3D calculateSurfaceNormal(float* triangle);
 
 signals:
@@ -38,6 +39,10 @@ private:
    GLint m_lNormalMatrix;
    GLint m_lLightPosition;
    qreal m_rRotate;
+
+   float* m_fVertices;
+   int    m_iSphereRes;
+   int    m_iNumVertices;
 
 };
 

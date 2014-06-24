@@ -6,7 +6,8 @@ SOURCES += main.cpp \
     basicgl.cpp
 
 RESOURCES += qml.qrc \
-    shaders.qrc
+    shaders.qrc \
+    textures.qrc
 
 # Additional import path used to resolve QML modules in Qt Creator's code model
 QML_IMPORT_PATH =

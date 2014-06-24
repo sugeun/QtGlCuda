@@ -11,26 +11,19 @@ uniform mat3 normalMatrix;
 void main()
 {
     vec4 baseColor = vec4(1.0f, 0.0f, 1.0f, 1.0f);
-    vec4 errorColor = vec4(0.0f, 1.0f, 0.0f, 1.0f);
 
-    vec3 vEyeNormal = normalMatrix * vNormal;
+    float theta, phi;
 
-    vec4 vPos4 = mvMatrix * vertices;
-    vec3 vPos3 = vPos4.xyz / vPos4.w;
-    vec3 vLightDir = normalize( vLightPosition - vPos3 );
+    theta = vertices.x * 2.0f * 3.14f;
+    phi = vertices.y * 3.14f;
 
-    float diffuse = max(0.0, dot(vEyeNormal, vLightDir));
+    vec4 sphereVertex = vec4(0.0f, 0.0f, 0.0f, 1.0f);
 
+    sphereVertex.x = cos(theta) * sin(phi);
+    sphereVertex.y = sin(theta) * sin(phi);
+    sphereVertex.z = cos(phi);
 
-    if( vPos4.z > 0.0 )
-    {
-      baseColor = errorColor;
-
-    }
-    //baseColor = errorColor;
-
-    //vVaryingColor.xyz = diffuse * baseColor.xyz;
-    vVaryingColor.xyz = baseColor.xyz;
+    vVaryingColor.rgb = baseColor.rgb;
     vVaryingColor.a = 1.0;
-    gl_Position = mvpMatrix * vertices;
+    gl_Position = mvpMatrix * sphereVertex;
 }
