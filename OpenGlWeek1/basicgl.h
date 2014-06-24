@@ -20,6 +20,7 @@ public:
 private:
    void init();
    void initSphereVertices();
+   bool initSphereTexture();
    QVector3D calculateSurfaceNormal(float* triangle);
 
 signals:
@@ -38,6 +39,9 @@ private:
    GLint m_lMvMatrix;
    GLint m_lNormalMatrix;
    GLint m_lLightPosition;
+   GLint m_lTextureUniform;
+
+   GLuint m_iTexture[1];
    qreal m_rRotate;
 
    float* m_fVertices;

@@ -4,6 +4,7 @@
 #include <QtGui/QMatrix4x4>
 #include <QtGui/QOpenGLShaderProgram>
 #include <QtGui/QOpenGLContext>
+#include <QtOpenGL/qgl.h>
 
 BasicGl::BasicGl()
    : m_pShaderProgram(0)
@@ -61,9 +62,10 @@ void BasicGl::init()
    m_lMvMatrix = m_pShaderProgram->uniformLocation("mvMatrix");
    m_lNormalMatrix = m_pShaderProgram->uniformLocation("normalMatrix");
    m_lLightPosition = m_pShaderProgram->uniformLocation("vLightPosition");
+   m_lTextureUniform = m_pShaderProgram->uniformLocation("sphereTexmap");
 
    initSphereVertices();
-
+   initSphereTexture();
 }
 
 void BasicGl::initSphereVertices()
@@ -77,20 +79,41 @@ void BasicGl::initSphereVertices()
     int vIdx = 0;
     for( int j = 0 ; j < m_iSphereRes - 1 ; j++ )
     {
-    for( int i = 0 ; i < m_iSphereRes ; i++ )
-    {
-        float x, y1, y2;
-        x = float(i) * delta;
-        y1 = 1.0f - float(j) * delta;
-        y2 = 1.0f - float(j+1) * delta;
-        m_fVertices[vIdx++] = x;
-        m_fVertices[vIdx++] = y1;
-        m_fVertices[vIdx++] = x;
-        m_fVertices[vIdx++] = y2;
+        for( int i = 0 ; i < m_iSphereRes ; i++ )
+        {
+            float x, y1, y2;
+            x = float(i) * delta;
+            y1 = 1.0f - float(j) * delta;
+            y2 = 1.0f - float(j+1) * delta;
+            m_fVertices[vIdx++] = x;
+            m_fVertices[vIdx++] = y1;
+            m_fVertices[vIdx++] = x;
+            m_fVertices[vIdx++] = y2;
 
+        }
     }
-    }
-    int vIdx1 = 0;
+}
+
+bool BasicGl::initSphereTexture()
+{
+
+    GLbyte* pBits;
+    int nWidth, nHeight, nComponents;
+    GLenum eFormat;
+    QPixmap texturePixmap(QString(":/Marble.png"));
+    nWidth = texturePixmap.width();
+    nHeight = texturePixmap.height();
+
+    pBits = (GLbyte*) texturePixmap.toImage().bits();
+
+    glGenTextures(1, m_iTexture);
+
+    glBindTexture(GL_TEXTURE_2D, m_iTexture[0]);
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_COMPRESSED_RGB, nWidth, nHeight, 0,
+                 GL_RGB, GL_UNSIGNED_BYTE, pBits);
+
+    return true;
 }
 
 
@@ -113,6 +136,8 @@ void BasicGl::paint()
    m_pShaderProgram->setUniformValue(m_lMvpMatrix, matrix);
    m_pShaderProgram->setUniformValue(m_lNormalMatrix, matrix.normalMatrix() );
 
+   //m_pShaderProgram->setUniformValue(m_lTextureUniform, matrix);
+
    QMatrix3x3 normalMatrix = matrix.normalMatrix();
 
    QVector3D surfaceNormal;// = calculateSurfaceNormal(m_fVertices);
@@ -126,10 +151,10 @@ void BasicGl::paint()
    int y = window()->height() - (this->y() + h );
    glViewport(x, y, w, h);
 
-   //glEnable(GL_DEPTH_TEST);
+   glEnable(GL_DEPTH_TEST);
    glClear(GL_COLOR_BUFFER_BIT);
 
-
+   glBindTexture(GL_TEXTURE_2D, m_iTexture[0]);
    //glDrawArrays(GL_TRIANGLE_STRIP, 0 , m_iNumVertices) ;
    glDrawArrays(GL_LINE_STRIP, 0 , m_iNumVertices) ;
 

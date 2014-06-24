@@ -2,6 +2,7 @@ attribute vec4 vertices;
 attribute vec3 vNormal;
 
 varying vec4 vVaryingColor;
+varying vec4 vTexCord;
 
 uniform vec3 vLightPosition;
 uniform mat4 mvpMatrix;
@@ -26,4 +27,5 @@ void main()
     vVaryingColor.rgb = baseColor.rgb;
     vVaryingColor.a = 1.0;
     gl_Position = mvpMatrix * sphereVertex;
+    vTexCord = vertices;
 }
