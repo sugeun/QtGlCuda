@@ -3,6 +3,7 @@
 
 #include <QtQuick/QQuickItem>
 #include <QtGui/QOpenGLShaderProgram>
+#include <QVector3D>
 
 class BasicGl : public QQuickItem
 {
@@ -16,6 +17,10 @@ public:
    qreal rotate() const { return m_rRotate; }
    void setRotate(qreal rotate);
 
+private:
+   void init();
+   QVector3D calculateSurfaceNormal(float* triangle);
+
 signals:
    void rotateChanged();
 
@@ -28,7 +33,10 @@ private slots:
 private:
    QOpenGLShaderProgram* m_pShaderProgram;
 
-   GLint m_iMatrixUniform;
+   GLint m_lMvpMatrix;
+   GLint m_lMvMatrix;
+   GLint m_lNormalMatrix;
+   GLint m_lLightPosition;
    qreal m_rRotate;
 
 };
