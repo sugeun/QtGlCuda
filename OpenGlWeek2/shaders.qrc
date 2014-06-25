@@ -1,0 +1,7 @@
+<RCC>
+    <qresource prefix="/">
+        <file>BasicGlFragment.frag</file>
+        <file>BasicGlVertex.vert</file>
+        <file>Marble.png</file>
+    </qresource>
+</RCC>

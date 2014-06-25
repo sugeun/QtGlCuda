@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/">
+        <file>Marble.png</file>
+    </qresource>
+</RCC>
