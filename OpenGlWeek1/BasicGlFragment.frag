@@ -1,7 +1,7 @@
+uniform sampler2D sphereTexmap;
+
 varying vec4 vVaryingColor;
 varying vec4 vTexCord;
-
-uniform sampler2D sphereTexmap;
 
 void main()
 {

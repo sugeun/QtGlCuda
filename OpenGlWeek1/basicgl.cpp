@@ -1,10 +1,12 @@
 #include "basicgl.h"
 
+#include <QtOpenGL/qgl.h>
 #include <QtQuick/qquickwindow.h>
 #include <QtGui/QMatrix4x4>
 #include <QtGui/QOpenGLShaderProgram>
 #include <QtGui/QOpenGLContext>
-#include <QtOpenGL/qgl.h>
+
+
 
 BasicGl::BasicGl()
    : m_pShaderProgram(0)
@@ -56,13 +58,15 @@ void BasicGl::init()
 
    m_pShaderProgram->bindAttributeLocation("vertices", 0);
    m_pShaderProgram->bindAttributeLocation("vNormal", 1);
+   //m_pShaderProgram->setUniformValue("sphereTexmap", 0);
 
    m_pShaderProgram->link();
-   m_lMvpMatrix = m_pShaderProgram->uniformLocation("mvpMatrix");
-   m_lMvMatrix = m_pShaderProgram->uniformLocation("mvMatrix");
-   m_lNormalMatrix = m_pShaderProgram->uniformLocation("normalMatrix");
-   m_lLightPosition = m_pShaderProgram->uniformLocation("vLightPosition");
    m_lTextureUniform = m_pShaderProgram->uniformLocation("sphereTexmap");
+   m_lMvpMatrix = m_pShaderProgram->uniformLocation("mvpMatrix");
+   //m_lMvMatrix = m_pShaderProgram->uniformLocation("mvMatrix");
+   //m_lNormalMatrix = m_pShaderProgram->uniformLocation("normalMatrix");
+   //m_lLightPosition = m_pShaderProgram->uniformLocation("vLightPosition");
+   //
 
    initSphereVertices();
    initSphereTexture();
@@ -70,14 +74,14 @@ void BasicGl::init()
 
 void BasicGl::initSphereVertices()
 {
-    m_iNumVertices = m_iSphereRes * (m_iSphereRes - 1 ) * 2;
+    m_iNumVertices = m_iSphereRes * (m_iSphereRes ) * 2;
 
     m_fVertices = new float[m_iNumVertices * 2];
 
     float delta = 1.0f / float(m_iSphereRes);
 
     int vIdx = 0;
-    for( int j = 0 ; j < m_iSphereRes - 1 ; j++ )
+    for( int j = 0 ; j < m_iSphereRes ; j++ )
     {
         for( int i = 0 ; i < m_iSphereRes ; i++ )
         {
@@ -104,14 +108,17 @@ bool BasicGl::initSphereTexture()
     nWidth = texturePixmap.width();
     nHeight = texturePixmap.height();
 
+    glGenTextures(1, m_iTexture);
+    glBindTexture(GL_TEXTURE_2D, m_iTexture[0]);
+
+    int byteCount = texturePixmap.toImage().bytesPerLine();
+
     pBits = (GLbyte*) texturePixmap.toImage().bits();
 
-    glGenTextures(1, m_iTexture);
-
-    glBindTexture(GL_TEXTURE_2D, m_iTexture[0]);
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_COMPRESSED_RGB, nWidth, nHeight, 0,
-                 GL_RGB, GL_UNSIGNED_BYTE, pBits);
+                 GL_RGBA, GL_UNSIGNED_BYTE, pBits);
+
 
     return true;
 }
@@ -130,13 +137,12 @@ void BasicGl::paint()
    mNormal.normalMatrix();
 
    QMatrix4x4 matrix;
-   matrix.rotate( 360.0f * m_rRotate, 0, 1, 0);
-   m_pShaderProgram->setUniformValue(m_lMvMatrix, matrix);
+   matrix.rotate( 360.0f * m_rRotate, 0.2f, 1, 0);
+   //m_pShaderProgram->setUniformValue(m_lMvMatrix, matrix);
    matrix.ortho(-2.0f, 2.0f, -2.0f, 2.0f, -2.0f, 2.0f);
    m_pShaderProgram->setUniformValue(m_lMvpMatrix, matrix);
-   m_pShaderProgram->setUniformValue(m_lNormalMatrix, matrix.normalMatrix() );
+   //m_pShaderProgram->setUniformValue(m_lNormalMatrix, matrix.normalMatrix() );
 
-   //m_pShaderProgram->setUniformValue(m_lTextureUniform, matrix);
 
    QMatrix3x3 normalMatrix = matrix.normalMatrix();
 
@@ -152,11 +158,22 @@ void BasicGl::paint()
    glViewport(x, y, w, h);
 
    glEnable(GL_DEPTH_TEST);
+   //glClearColor (0.5f, 0.5f, 0.5f, 1.0f);
    glClear(GL_COLOR_BUFFER_BIT);
 
+   //glActiveTexture(GL_TEXTURE0);
    glBindTexture(GL_TEXTURE_2D, m_iTexture[0]);
-   //glDrawArrays(GL_TRIANGLE_STRIP, 0 , m_iNumVertices) ;
+   //glUniform1i(m_lTextureUniform, 0);
+
+
+
+//   for (int i = 0; i < m_iSphereRes - 1 ; ++i)
+//   {
+//      int numVertexStrip = m_iSphereRes;
+//      glDrawArrays(GL_LINE_STRIP, i * numVertexStrip , numVertexStrip * 2 - 1) ;
+//   }
    glDrawArrays(GL_LINE_STRIP, 0 , m_iNumVertices) ;
+   //glDrawArrays(GL_TRIANGLE_STRIP, 0 , m_iNumVertices) ;
 
    m_pShaderProgram->disableAttributeArray(0);
    m_pShaderProgram->release();

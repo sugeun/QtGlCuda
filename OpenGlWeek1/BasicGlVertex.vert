@@ -4,10 +4,10 @@ attribute vec3 vNormal;
 varying vec4 vVaryingColor;
 varying vec4 vTexCord;
 
-uniform vec3 vLightPosition;
+//uniform vec3 vLightPosition;
 uniform mat4 mvpMatrix;
-uniform mat4 mvMatrix;
-uniform mat3 normalMatrix;
+//uniform mat4 mvMatrix;
+//uniform mat3 normalMatrix;
 
 void main()
 {
@@ -16,7 +16,7 @@ void main()
     float theta, phi;
 
     theta = vertices.x * 2.0f * 3.14f;
-    phi = vertices.y * 3.14f;
+    phi = (1.0f - vertices.y) * 3.14f;
 
     vec4 sphereVertex = vec4(0.0f, 0.0f, 0.0f, 1.0f);
 
@@ -24,8 +24,9 @@ void main()
     sphereVertex.y = sin(theta) * sin(phi);
     sphereVertex.z = cos(phi);
 
-    vVaryingColor.rgb = baseColor.rgb;
+    vVaryingColor.rgb = vertices.rgb;
     vVaryingColor.a = 1.0;
     gl_Position = mvpMatrix * sphereVertex;
+    //gl_Position = mvpMatrix * vertices;
     vTexCord = vertices;
 }
