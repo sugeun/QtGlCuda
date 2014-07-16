@@ -32,6 +32,7 @@ protected:
 
 private:
     void makeObject();
+    void initSphereVertices();
 
     QColor clearColor;
     QPoint lastPos;
@@ -42,6 +43,10 @@ private:
     QVector<QVector3D> vertices;
     QVector<QVector2D> texCoords;
     QGLShaderProgram *program;
+
+    float* m_fVertices;
+    int    m_iSphereRes;
+    int    m_iNumVertices;
 };
 
 #endif

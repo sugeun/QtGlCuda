@@ -1,5 +1,6 @@
 attribute vec4 vertices;
-attribute vec3 vNormal;
+//attribute vec3 vNormal;
+attribute vec4 texCoord;
 
 varying vec4 vVaryingColor;
 varying vec4 vTexCord;
@@ -20,13 +21,14 @@ void main()
 
     vec4 sphereVertex = vec4(0.0f, 0.0f, 0.0f, 1.0f);
 
-    sphereVertex.x = cos(theta) * sin(phi);
-    sphereVertex.y = sin(theta) * sin(phi);
-    sphereVertex.z = cos(phi);
+    sphereVertex.x = sin(theta) * sin(phi); //y
+    sphereVertex.y = cos(phi); //z
+    sphereVertex.z = cos(theta) * sin(phi); //x
 
     vVaryingColor.rgb = vertices.rgb;
     vVaryingColor.a = 1.0;
     gl_Position = mvpMatrix * sphereVertex;
     //gl_Position = mvpMatrix * vertices;
-    vTexCord = vertices;
+    //vTexCord = vertices;
+    vTexCord = texCoord;
 }

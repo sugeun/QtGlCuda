@@ -7,6 +7,7 @@
 
 basicGlWidget::basicGlWidget(QWidget *parent, QGLWidget *shareWidget)
     : QGLWidget(parent, shareWidget)
+    , m_iSphereRes( 10 )
 {
     clearColor = Qt::black;
     xRot = 0;
@@ -21,12 +22,12 @@ basicGlWidget::~basicGlWidget()
 
 QSize basicGlWidget::minimumSizeHint() const
 {
-    return QSize(50, 50);
+    return QSize(100, 100);
 }
 
 QSize basicGlWidget::sizeHint() const
 {
-    return QSize(200, 200);
+    return QSize(400, 400);
 }
 
 void basicGlWidget::rotateBy(int xAngle, int yAngle, int zAngle)
@@ -59,37 +60,21 @@ void basicGlWidget::initializeGL()
 #define PROGRAM_TEXCOORD_ATTRIBUTE 1
 
     QGLShader *vshader = new QGLShader(QGLShader::Vertex, this);
-    const char *vsrc =
-        "attribute highp vec4 vertex;\n"
-        "attribute mediump vec4 texCoord;\n"
-        "varying mediump vec4 texc;\n"
-        "uniform mediump mat4 matrix;\n"
-        "void main(void)\n"
-        "{\n"
-        "    gl_Position = matrix * vertex;\n"
-        "    texc = texCoord;\n"
-        "}\n";
-    vshader->compileSourceCode(vsrc);
+    vshader->compileSourceFile(":/BasicGlVertex.vert");
 
     QGLShader *fshader = new QGLShader(QGLShader::Fragment, this);
-    const char *fsrc =
-        "uniform sampler2D texture;\n"
-        "varying mediump vec4 texc;\n"
-        "void main(void)\n"
-        "{\n"
-        "    gl_FragColor = texture2D(texture, texc.st);\n"
-        "}\n";
-    fshader->compileSourceCode(fsrc);
+    fshader->compileSourceFile( ":/BasicGlFragment.frag" );
+
 
     program = new QGLShaderProgram(this);
     program->addShader(vshader);
     program->addShader(fshader);
-    program->bindAttributeLocation("vertex", PROGRAM_VERTEX_ATTRIBUTE);
+    program->bindAttributeLocation("vertices", PROGRAM_VERTEX_ATTRIBUTE);
     program->bindAttributeLocation("texCoord", PROGRAM_TEXCOORD_ATTRIBUTE);
     program->link();
 
     program->bind();
-    program->setUniformValue("texture", 0);
+    program->setUniformValue("sphereTexmap", 0);
 }
 
 void basicGlWidget::paintGL()
@@ -97,14 +82,12 @@ void basicGlWidget::paintGL()
     qglClearColor(clearColor);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    QMatrix4x4 m;
-    m.ortho(-0.5f, +0.5f, +0.5f, -0.5f, 4.0f, 15.0f);
-    m.translate(0.0f, 0.0f, -10.0f);
-    m.rotate(xRot / 16.0f, 1.0f, 0.0f, 0.0f);
-    m.rotate(yRot / 16.0f, 0.0f, 1.0f, 0.0f);
-    m.rotate(zRot / 16.0f, 0.0f, 0.0f, 1.0f);
+    QMatrix4x4 matrix;
+    matrix.rotate( xRot / 16.0f, 0.2f, 1, 0);
 
-    program->setUniformValue("matrix", m);
+    matrix.ortho(-2.0f, 2.0f, -2.0f, 2.0f, -2.0f, 2.0f);
+
+    program->setUniformValue("mvpMatrix", matrix);
     program->enableAttributeArray(PROGRAM_VERTEX_ATTRIBUTE);
     program->enableAttributeArray(PROGRAM_TEXCOORD_ATTRIBUTE);
     program->setAttributeArray
@@ -112,14 +95,22 @@ void basicGlWidget::paintGL()
     program->setAttributeArray
         (PROGRAM_TEXCOORD_ATTRIBUTE, texCoords.constData());
 
-    for (int i = 0; i < 6; ++i) {
-        glBindTexture(GL_TEXTURE_2D, textures[i]);
-        glDrawArrays(GL_TRIANGLE_FAN, i * 4, 4);
-    }
+
+   glActiveTexture( textures[0]);
+   glBindTexture(GL_TEXTURE_2D, textures[0]);
+   for (int i = 0; i < m_iSphereRes  ; ++i)
+   {
+      int numVertexStrip = m_iSphereRes * 2;
+      //glDrawArrays(GL_TRIANGLE_STRIP, i * numVertexStrip , numVertexStrip * 2) ;
+      glDrawArrays(GL_LINE_STRIP, i * numVertexStrip , numVertexStrip * 2) ;
+   }
+//    glBindTexture(GL_TEXTURE_2D, textures[0]);
+//    glDrawArrays(GL_TRIANGLE_STRIP, 0 , m_iNumVertices) ;
 }
 
 void basicGlWidget::resizeGL(int width, int height)
 {
+
     int side = qMin(width, height);
     glViewport((width - side) / 2, (height - side) / 2, side, side);
 }
@@ -127,27 +118,53 @@ void basicGlWidget::resizeGL(int width, int height)
 
 void basicGlWidget::makeObject()
 {
-    static const int coords[6][4][3] = {
-        { { +1, -1, -1 }, { -1, -1, -1 }, { -1, +1, -1 }, { +1, +1, -1 } },
-        { { +1, +1, -1 }, { -1, +1, -1 }, { -1, +1, +1 }, { +1, +1, +1 } },
-        { { +1, -1, +1 }, { +1, -1, -1 }, { +1, +1, -1 }, { +1, +1, +1 } },
-        { { -1, -1, -1 }, { -1, -1, +1 }, { -1, +1, +1 }, { -1, +1, -1 } },
-        { { +1, -1, +1 }, { -1, -1, +1 }, { -1, -1, -1 }, { +1, -1, -1 } },
-        { { -1, -1, +1 }, { +1, -1, +1 }, { +1, +1, +1 }, { -1, +1, +1 } }
-    };
+    initSphereVertices();
 
-    for (int j=0; j < 6; ++j) {
-        textures[j] = bindTexture
-            (QPixmap(QString(":/Marble.png")), GL_TEXTURE_2D);
+    textures[0] = bindTexture
+        (QPixmap(QString(":/Marble.png")), GL_TEXTURE_2D);
+
+
+
+    int vIdx = 0;
+    for (int i = 0; i < m_iNumVertices; ++i)
+    {
+        int idx = vIdx;
+        texCoords.append
+            (QVector2D(m_fVertices[idx], m_fVertices[idx + 1 ]));
+        //qDebug() << m_fVertices[idx] << " " << m_fVertices[idx + 1 ];
+        vertices.append
+            (QVector3D(m_fVertices[idx ],
+                       m_fVertices[idx + 1],
+                       0.0f));
+        vIdx += 2;
+
     }
+}
 
-    for (int i = 0; i < 6; ++i) {
-        for (int j = 0; j < 4; ++j) {
-            texCoords.append
-                (QVector2D(j == 0 || j == 3, j == 0 || j == 1));
-            vertices.append
-                (QVector3D(0.2 * coords[i][j][0], 0.2 * coords[i][j][1],
-                           0.2 * coords[i][j][2]));
+void basicGlWidget::initSphereVertices()
+{
+    m_iNumVertices = (m_iSphereRes )  * (m_iSphereRes + 1 ) * 2;
+
+    m_fVertices = new float[m_iNumVertices * 2];
+
+    float delta = 1.0f / float(m_iSphereRes);
+    float deltax = 1.0f / float(m_iSphereRes);
+
+    int vIdx = 0;
+    for( int j = 0 ; j < m_iSphereRes ; j++ )
+    {
+        for( int i = 0 ; i <= m_iSphereRes ; i++ )
+        {
+            float x, y1, y2;
+            x = float(i) * deltax;
+            y1 = 1.0f - float(j) * delta;
+            y2 = 1.0f - float(j+1) * delta;
+            qDebug()<< x << ", " << y1 << ", " << y2 ;
+            m_fVertices[vIdx++] = x;
+            m_fVertices[vIdx++] = y1;
+            m_fVertices[vIdx++] = x;
+            m_fVertices[vIdx++] = y2;
+
         }
     }
 }

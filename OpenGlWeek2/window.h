@@ -17,7 +17,7 @@ private slots:
     void rotateOneStep();
 
 private:
-    enum { NumRows = 2, NumColumns = 3 };
+    enum { NumRows = 1, NumColumns = 2 };
 
     basicGlWidget *glWidgets[NumRows][NumColumns];
     basicGlWidget *currentGlWidget;
