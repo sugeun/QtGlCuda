@@ -7,7 +7,8 @@
 
 basicGlWidget::basicGlWidget(QWidget *parent, QGLWidget *shareWidget)
     : QGLWidget(parent, shareWidget)
-    , m_iSphereRes( 10 )
+    , m_iSphereRes( 100 )
+    , m_iNumTextures(2)
 {
     clearColor = Qt::black;
     xRot = 0;
@@ -96,16 +97,31 @@ void basicGlWidget::paintGL()
         (PROGRAM_TEXCOORD_ATTRIBUTE, texCoords.constData());
 
 
-   glActiveTexture( textures[0]);
-   glBindTexture(GL_TEXTURE_2D, textures[0]);
-   for (int i = 0; i < m_iSphereRes  ; ++i)
-   {
-      int numVertexStrip = m_iSphereRes * 2;
-      //glDrawArrays(GL_TRIANGLE_STRIP, i * numVertexStrip , numVertexStrip * 2) ;
-      glDrawArrays(GL_LINE_STRIP, i * numVertexStrip , numVertexStrip * 2) ;
-   }
-//    glBindTexture(GL_TEXTURE_2D, textures[0]);
-//    glDrawArrays(GL_TRIANGLE_STRIP, 0 , m_iNumVertices) ;
+
+    int tIdx = 0;
+    for (int i = 0; i < m_iSphereRes  ; ++i)
+    {
+        //glActiveTexture( textures[tIdx]);
+        glBindTexture(GL_TEXTURE_2D, textures[tIdx]);
+        int numVertexStrip = m_iSphereRes * 2 + 2;
+        glDrawArrays(GL_TRIANGLE_STRIP, i * numVertexStrip , numVertexStrip * 2) ;
+        qDebug()<< i << ", " << i * numVertexStrip  << ", " << numVertexStrip * 2 ;
+        //glDrawArrays(GL_LINE_STRIP, i * numVertexStrip , numVertexStrip * 2) ;
+        tIdx = (tIdx + 1) %  m_iNumTextures;
+    }
+
+//    for (int i = 0; i < m_iSphereRes   ; ++i)
+//    {
+//        //glActiveTexture( textures[tIdx]);
+//        glBindTexture(GL_TEXTURE_2D, textures[0]);
+//        int numVertexStrip = m_iSphereRes * 2 + 2;
+//        glDrawArrays(GL_TRIANGLE_STRIP, i * numVertexStrip , numVertexStrip) ;
+//        glBindTexture(GL_TEXTURE_2D, textures[1]);
+//        glDrawArrays(GL_TRIANGLE_STRIP, i * numVertexStrip + numVertexStrip  , numVertexStrip) ;
+//        qDebug()<< i << ", " << i * numVertexStrip  << ", " << numVertexStrip * 2 ;
+//        //glDrawArrays(GL_LINE_STRIP, i * numVertexStrip , numVertexStrip * 2) ;
+//        tIdx = (tIdx + 1) %  m_iNumTextures;
+//    }
 }
 
 void basicGlWidget::resizeGL(int width, int height)
@@ -120,9 +136,12 @@ void basicGlWidget::makeObject()
 {
     initSphereVertices();
 
-    textures[0] = bindTexture
-        (QPixmap(QString(":/Marble.png")), GL_TEXTURE_2D);
 
+    for( int i = 0 ; i < m_iNumTextures ; i++)
+    {
+        textures[i] = bindTexture
+            (QPixmap(QString(":/Marble_%1.png").arg(i)), GL_TEXTURE_2D);
+    }
 
 
     int vIdx = 0;
@@ -131,7 +150,6 @@ void basicGlWidget::makeObject()
         int idx = vIdx;
         texCoords.append
             (QVector2D(m_fVertices[idx], m_fVertices[idx + 1 ]));
-        //qDebug() << m_fVertices[idx] << " " << m_fVertices[idx + 1 ];
         vertices.append
             (QVector3D(m_fVertices[idx ],
                        m_fVertices[idx + 1],
@@ -153,7 +171,7 @@ void basicGlWidget::initSphereVertices()
     int vIdx = 0;
     for( int j = 0 ; j < m_iSphereRes ; j++ )
     {
-        for( int i = 0 ; i <= m_iSphereRes ; i++ )
+        for( int i = 0 ; i <= m_iSphereRes  ; i++ )
         {
             float x, y1, y2;
             x = float(i) * deltax;

@@ -46,6 +46,7 @@ private:
 
     float* m_fVertices;
     int    m_iSphereRes;
+    int    m_iNumTextures;
     int    m_iNumVertices;
 };
 

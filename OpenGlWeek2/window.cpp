@@ -9,17 +9,14 @@ Window::Window()
     for (int i = 0; i < NumRows; ++i) {
         for (int j = 0; j < NumColumns; ++j) {
             QColor clearColor;
-            clearColor.setHsv(((i * NumColumns) + j) * 255
-                              / (NumRows * NumColumns - 1),
-                              255, 63);
+            clearColor.setBlue(0);
+            clearColor.setRed(0);
+            clearColor.setGreen(0);
 
             glWidgets[i][j] = new basicGlWidget(0, 0);
             glWidgets[i][j]->setClearColor(clearColor);
-            //glWidgets[i][j]->rotateBy(+42 * 16, +42 * 16, -21 * 16);
             mainLayout->addWidget(glWidgets[i][j], i, j);
 
-//            connect(glWidgets[i][j], SIGNAL(clicked()),
-//                    this, SLOT(setCurrentGlWidget()));
         }
     }
     setLayout(mainLayout);

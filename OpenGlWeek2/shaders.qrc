@@ -2,6 +2,7 @@
     <qresource prefix="/">
         <file>BasicGlFragment.frag</file>
         <file>BasicGlVertex.vert</file>
-        <file>Marble.png</file>
+        <file>Marble_0.png</file>
+        <file>Marble_1.png</file>
     </qresource>
 </RCC>
