@@ -32,7 +32,7 @@ protected:
 
 private:
     void makeObject();
-    void initSphereVertices();
+    void initVertices();
 
     QColor clearColor;
     QPoint lastPos;
@@ -42,6 +42,7 @@ private:
     GLuint textures[6];
     QVector<QVector3D> vertices;
     QVector<QVector2D> texCoords;
+    QVector<QVector3D> surfNorms;
     QGLShaderProgram *program;
 
     float* m_fVertices;

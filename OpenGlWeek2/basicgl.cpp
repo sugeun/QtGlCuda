@@ -187,23 +187,4 @@ void BasicGl::paint()
 
 
 
-QVector3D BasicGl::calculateSurfaceNormal(float* triangle)
-{
-   QVector3D normalVector;
-   QVector3D uVector;
-   QVector3D vVector;
-   QVector3D tPoint[3];
 
-   for( int i = 0 ; i < 3 ; i++)
-   {
-      tPoint[i].setX( qreal(triangle[i * 3 ]));
-      tPoint[i].setY( qreal(triangle[i * 3 + 1]));
-      tPoint[i].setZ( qreal(triangle[i * 3 + 2]));
-   }
-
-   uVector = tPoint[1] - tPoint[0];
-   vVector = tPoint[2] - tPoint[0];
-
-   normalVector = QVector3D::crossProduct(uVector,vVector);
-   return normalVector;
-}

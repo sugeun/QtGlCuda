@@ -59,6 +59,7 @@ void basicGlWidget::initializeGL()
 
 #define PROGRAM_VERTEX_ATTRIBUTE 0
 #define PROGRAM_TEXCOORD_ATTRIBUTE 1
+#define PROGRAM_SURFACENORMAL_ATTRIBUTE 2
 
     QGLShader *vshader = new QGLShader(QGLShader::Vertex, this);
     vshader->compileSourceFile(":/BasicGlVertex.vert");
@@ -72,6 +73,7 @@ void basicGlWidget::initializeGL()
     program->addShader(fshader);
     program->bindAttributeLocation("vertices", PROGRAM_VERTEX_ATTRIBUTE);
     program->bindAttributeLocation("texCoord", PROGRAM_TEXCOORD_ATTRIBUTE);
+    program->bindAttributeLocation("surfNormal", PROGRAM_SURFACENORMAL_ATTRIBUTE);
     program->link();
 
     program->bind();
@@ -83,45 +85,37 @@ void basicGlWidget::paintGL()
     qglClearColor(clearColor);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    QMatrix4x4 matrix;
-    matrix.rotate( xRot / 16.0f, 0.2f, 1, 0);
+    QMatrix4x4 mvmatrix, mvpMatrix;
+    mvmatrix.rotate( xRot / 160.0f, 0.2f, 1, 0);
 
-    matrix.ortho(-2.0f, 2.0f, -2.0f, 2.0f, -2.0f, 2.0f);
+    program->setUniformValue("mvMatrix", mvmatrix);
+    mvpMatrix = mvmatrix;
+    mvpMatrix.ortho(-2.0f, 2.0f, -2.0f, 2.0f, -2.0f, 2.0f);
 
-    program->setUniformValue("mvpMatrix", matrix);
+    program->setUniformValue("mvpMatrix", mvpMatrix);
     program->enableAttributeArray(PROGRAM_VERTEX_ATTRIBUTE);
     program->enableAttributeArray(PROGRAM_TEXCOORD_ATTRIBUTE);
+    program->enableAttributeArray(PROGRAM_SURFACENORMAL_ATTRIBUTE);
     program->setAttributeArray
         (PROGRAM_VERTEX_ATTRIBUTE, vertices.constData());
     program->setAttributeArray
         (PROGRAM_TEXCOORD_ATTRIBUTE, texCoords.constData());
-
+    program->setAttributeArray
+        (PROGRAM_SURFACENORMAL_ATTRIBUTE, surfNorms.constData());
 
 
     int tIdx = 0;
-    for (int i = 0; i < m_iSphereRes  ; ++i)
+    for (int i = 0; i < m_iSphereRes - 1 ; ++i)
     {
         //glActiveTexture( textures[tIdx]);
         glBindTexture(GL_TEXTURE_2D, textures[tIdx]);
         int numVertexStrip = m_iSphereRes * 2 + 2;
         glDrawArrays(GL_TRIANGLE_STRIP, i * numVertexStrip , numVertexStrip * 2) ;
-        qDebug()<< i << ", " << i * numVertexStrip  << ", " << numVertexStrip * 2 ;
+        //qDebug()<< i << ", " << i * numVertexStrip  << ", " << numVertexStrip * 2 ;
         //glDrawArrays(GL_LINE_STRIP, i * numVertexStrip , numVertexStrip * 2) ;
         tIdx = (tIdx + 1) %  m_iNumTextures;
     }
 
-//    for (int i = 0; i < m_iSphereRes   ; ++i)
-//    {
-//        //glActiveTexture( textures[tIdx]);
-//        glBindTexture(GL_TEXTURE_2D, textures[0]);
-//        int numVertexStrip = m_iSphereRes * 2 + 2;
-//        glDrawArrays(GL_TRIANGLE_STRIP, i * numVertexStrip , numVertexStrip) ;
-//        glBindTexture(GL_TEXTURE_2D, textures[1]);
-//        glDrawArrays(GL_TRIANGLE_STRIP, i * numVertexStrip + numVertexStrip  , numVertexStrip) ;
-//        qDebug()<< i << ", " << i * numVertexStrip  << ", " << numVertexStrip * 2 ;
-//        //glDrawArrays(GL_LINE_STRIP, i * numVertexStrip , numVertexStrip * 2) ;
-//        tIdx = (tIdx + 1) %  m_iNumTextures;
-//    }
 }
 
 void basicGlWidget::resizeGL(int width, int height)
@@ -134,7 +128,7 @@ void basicGlWidget::resizeGL(int width, int height)
 
 void basicGlWidget::makeObject()
 {
-    initSphereVertices();
+    initVertices();
 
 
     for( int i = 0 ; i < m_iNumTextures ; i++)
@@ -150,16 +144,61 @@ void basicGlWidget::makeObject()
         int idx = vIdx;
         texCoords.append
             (QVector2D(m_fVertices[idx], m_fVertices[idx + 1 ]));
+
+        float x = m_fVertices[idx ];
+        float y = m_fVertices[idx + 1];
+        float theta = x * 2.0f * 3.14f;
+        float phi = (1.0f - y ) * 3.14f;
+
+        float sphereX = sin(theta) * sin(phi);
+        float sphereY = cos(phi);
+        float sphereZ = cos(theta) * sin(phi);
+
         vertices.append
-            (QVector3D(m_fVertices[idx ],
-                       m_fVertices[idx + 1],
-                       0.0f));
+            (QVector3D( sphereX,
+                        sphereY,
+                        sphereZ));
+
+        surfNorms.append(QVector3D( sphereX,
+                                    sphereY,
+                                    sphereZ).normalized());
+        //qDebug()<< "(" << x << "," << y << ")  " << sphereX << ", " << sphereY << ", " << sphereZ  ;
+
         vIdx += 2;
 
     }
+    qDebug()<< "vIdx: " << vIdx;
+
+
+//    for( int j = 0 ; j < vertices.count() - 2 ; j++)
+//    {
+//        QVector3D normalVector;
+//        QVector3D uVector;
+//        QVector3D vVector;
+//        QVector3D tPoint[3];
+
+//        for( int i = 0 ; i < 3 ; i++)
+//        {
+//           tPoint[i] = vertices[j + i];
+//        }
+////        tPoint[0] = QVector3D(1.0,-1.0,-1.0);
+////        tPoint[1] = QVector3D(1.0,-1.0,1.0);
+////        tPoint[2] = QVector3D(-1.0,-1.0,1.0);
+
+//        uVector = tPoint[1] - tPoint[0];
+//        vVector = tPoint[2] - tPoint[0];
+
+//        normalVector = QVector3D::crossProduct(uVector,vVector);
+//        normalVector.normalize();
+
+//        qDebug()<< "(" << j << ")  " << normalVector.x() << ", " << normalVector.y() << ", " << normalVector.z()  ;
+
+//        surfNorms.append(normalVector);
+//    }
+
 }
 
-void basicGlWidget::initSphereVertices()
+void basicGlWidget::initVertices()
 {
     m_iNumVertices = (m_iSphereRes )  * (m_iSphereRes + 1 ) * 2;
 
@@ -177,7 +216,7 @@ void basicGlWidget::initSphereVertices()
             x = float(i) * deltax;
             y1 = 1.0f - float(j) * delta;
             y2 = 1.0f - float(j+1) * delta;
-            qDebug()<< x << ", " << y1 << ", " << y2 ;
+            //qDebug()<< x << ", " << y1 << ", " << y2 ;
             m_fVertices[vIdx++] = x;
             m_fVertices[vIdx++] = y1;
             m_fVertices[vIdx++] = x;
@@ -185,4 +224,26 @@ void basicGlWidget::initSphereVertices()
 
         }
     }
+    qDebug()<< "vIdx: " << vIdx;
 }
+
+//QVector3D basicGlWidget::calculateSurfaceNormal(float* triangle)
+//{
+//   QVector3D normalVector;
+//   QVector3D uVector;
+//   QVector3D vVector;
+//   QVector3D tPoint[3];
+
+//   for( int i = 0 ; i < 3 ; i++)
+//   {
+//      tPoint[i].setX( qreal(triangle[i * 3 ]));
+//      tPoint[i].setY( qreal(triangle[i * 3 + 1]));
+//      tPoint[i].setZ( qreal(triangle[i * 3 + 2]));
+//   }
+
+//   uVector = tPoint[1] - tPoint[0];
+//   vVector = tPoint[2] - tPoint[0];
+
+//   normalVector = QVector3D::crossProduct(uVector,vVector);
+//   return normalVector;
+//}
